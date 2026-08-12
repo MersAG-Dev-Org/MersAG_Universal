@@ -18,7 +18,7 @@ Pin allocations
  Updated 2026 June David P Harris & John holmes
 ==============================================================
  - 8 Native input/output channels:
- - 32 MCP23017 input/output channels: Note A7 & B7 our Output only
+ - 64 MCP23017 input/output channels: Note A7 & B7 our Output only
     - type: 0=None, 
              1=Input, 2=Input inverted, 
              3=Input with pull-up, 4=Input with pull-up inverted, 
@@ -79,7 +79,7 @@ const char configDefInfo[] PROGMEM =
   <repname>Pin D27</repname>
   <repname>Pin D26</repname>
   <repname>Pin D25</repname>
-  <string size='24'><name>Description</name></string>
+  <string size='16'><name>Description</name></string>
   <int size='1'>
     <name>Channel type</name>
     <map>
@@ -113,7 +113,9 @@ const char configDefInfo[] PROGMEM =
   <description>Each pin can be either HIGH or LOW state logic. They can be set as Input(Except for A7 and B7), Output or not used, with 11 end-user options to choose from the dropdown list.</description>
   <repname>MCP: on 0x20 </repname>
   <repname>MCP: on 0x21 </repname>
-  <string size='24'><name>Description of the boards location</name></string>
+  <repname>MCP: on 0x22 </repname>
+  <repname>MCP: on 0x23 </repname>
+  <string size='16'><name>Description of the boards location</name></string>
   <string size='8'><name>This MCP is </name></string>
   <group replication=')" N(2) R"('>
     <name>Port banks selector care must be taken when using pins A7 or B7 as they are Ouptuts only</name>
@@ -129,7 +131,7 @@ const char configDefInfo[] PROGMEM =
       <repname>5</repname>
       <repname>6</repname>
       <repname>7(OUT ONLY)</repname>
-      <string size='24'><name>Description</name></string>
+      <string size='16'><name>Description</name></string>
       <int size='1'>
         <name>Channel type</name>
         <map>
@@ -164,8 +166,7 @@ const char configDefInfo[] PROGMEM =
   <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
   <description>Care must be taken when supplying the 5 volt power connections to the PCA9685, as many clones do not have reverse polarity protection as adversied.</description>
   <repname>PCA: on 0x40 </repname>
-  <repname>PCA: on 0x41 </repname>
-  <string size='24'><name>Description for this PCA boards location</name></string>
+  <string size='16'><name>Description for this PCA boards location</name></string>
   <string size='8'><name>This PCA is </name></string>
   <group replication=')" N(2) R"('>
   <name> Take note of the numbers in brackets are for channels 8 to 15</name>
@@ -181,17 +182,17 @@ const char configDefInfo[] PROGMEM =
       <repname>5(13)</repname>
       <repname>6(14)</repname>
       <repname>7(15)</repname>
-      <string size='24'><name>Description</name></string>
+      <string size='16'><name>Description</name></string>
       <int size='1'><name>Speed of movement 5-50</name>
         <min>5</min><max>50</max>
         <hints><slider tickSpacing='20' immediate='yes' showValue='yes'> </slider></hints>
       </int>
-      <int size='1'><name>Position 1 (Suggestion Closed). Angles between approximately 0-180 Care must be taken when using the slider in case of damae to turnouts.</name>
+      <int size='1'><name>Position 1 (Suggestion Closed). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
         <min>0</min><max>180</max>
         <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
       </int>
       <eventid><name>When consumed, move to this angle</name></eventid>
-      <int size='1'><name>Position 2 (Suggestion Thrown). Angles between approximately 0-180 Care must be taken when using the slider in case of damae to turnouts.</name>
+      <int size='1'><name>Position 2 (Suggestion Thrown). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
         <min>0</min><max>180</max>
         <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
       </int>
@@ -233,7 +234,7 @@ const char configDefInfo[] PROGMEM =
           char nodeDesc[24];  // optional node-description, used by ACDI
       // ===== Enter User definitions below =====
           struct {
-            char desc[24];
+            char desc[16];
             uint8_t type;
             uint8_t duration;    // 100ms-25.5s, 0=solid
             uint8_t period;      // 100ms-25.5s, 0=no repeat
@@ -241,10 +242,10 @@ const char configDefInfo[] PROGMEM =
             EventID offEid;
           } natio[NUM_NATIVE_IO];
           struct {
-            char desc[24];
+            char desc[16];
             char status[8];
             struct {
-              char desc[24];
+              char desc[16];
               uint8_t type;
               uint8_t duration;    // 100ms-25.5s, 0=solid
               uint8_t period;      // 100ms-25.5s, 0=no repeat
@@ -253,10 +254,10 @@ const char configDefInfo[] PROGMEM =
             } io[16]; 
           } mcp[NUM_MCP];         
           struct {
-            char desc[24];
+            char desc[16];
             char status[8];
             struct {
-              char desc[24];
+              char desc[16];
               uint8_t speed;
               uint8_t angle1;
               EventID eid1;
@@ -339,7 +340,7 @@ bool fakeinput = 0;
 void userInitAll()
 { 
   NODECONFIG.put(EEADDR(nodeName), ESTRING(BOARD));
-  NODECONFIG.put(EEADDR(nodeDesc), ESTRING("Universal Lite"));
+  NODECONFIG.put(EEADDR(nodeDesc), ESTRING("Universal "));
   dP("\n NUM_NATIVE_IO"); dP(NUM_NATIVE_IO);
   for(uint8_t i = 0; i < NUM_NATIVE_IO; i++) {
     NODECONFIG.put(EEADDR(natio[i].desc), ESTRING(""));
@@ -353,7 +354,7 @@ void userInitAll()
     NODECONFIG.put(EEADDR(mcp[m].status), ESTRING("??"));
     for(uint8_t i = 0; i < 16; i++) {
       NODECONFIG.put(EEADDR(mcp[m].io[i].desc), ESTRING(""));
-      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 0);
+      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);
       NODECONFIG.update(EEADDR(mcp[m].io[i].duration), 0);
       NODECONFIG.update(EEADDR(mcp[m].io[i].period), 0);
     }    
@@ -907,7 +908,7 @@ void setup()
   #ifdef DEBUG
     #define dP(...) Serial.print(__VA_ARGS__)
     Serial.begin(115200); while(!Serial) delay(100); delay(2000);
-    dP("\n 2Servo8IO2MCP2PCA");
+    dP("\n Universal");
     dP("\n num native io = "); dP(NUM_NATIVE_IO);
     dP("\n num mcp groups = "); dP(NUM_MCP_PORTS);
     dP("\n num io in each mcp group = "); dP(NUM_MCP_IO_PER_PORT);

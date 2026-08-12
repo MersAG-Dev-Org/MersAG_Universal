@@ -2,12 +2,20 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// To set a new nodeid based on your MERG membership number, edit the next line
+#define MERG_NUMBER 8528 // A MERG membership number (in decimal)
+#define NODE_ADDRESS 0x03, 0x04, (MERG_NUMBER >> 16), (MERG_NUMBER >> 8), (MERG_NUMBER & 0xFF), 1 // The last digit needs to be unique to your nodes
+
 // To set a new nodeid edit the next line
-#define NODE_ADDRESS  0x05,0x01,0x01,0x01,0x8E,0x01  // must be unique address owned by you for DIY
+//#define NODE_ADDRESS  0x05,0x01,0x01,0x01,0x8E,0x01  // must be unique address owned by you for DIY
 
 // To Force Reset EEPROM to Factory Defaults set this value to 1, else 0.
 // Need to do this at least once.
 #define RESET_TO_FACTORY_DEFAULTS 1
+
+// Allow direct to JMRI via USB, without CAN controller, comment out for CAN
+
+#define USEGCSERIAL
 
 /*
 
@@ -26,19 +34,14 @@
 
 //#define DEBUG Serial
 
-// Allow direct to JMRI via USB, without CAN controller, comment out for CAN
-
-//#define USEGCSERIAL
-#define NOCAN  // Do not comment out prevent the built in OpenLCB CAN drivers
-
 #include "boards.h"
 
 //#define NUM_NATIVE_IO 8 // defined in boards.h
 #define NUM_NAT_IO_EVENT (NUM_NATIVE_IO*2)
 
-const uint8_t MCP_ADDRESSES[] = {  0x20, 0x21 };
-#define NUM_MCP 2
-#define NUM_MCP_PORTS 4   //// calc by hand - two each on two mcp23017s
+const uint8_t MCP_ADDRESSES[] = {  0x27, 0x21, 0x22, 0x23};
+#define NUM_MCP 4
+#define NUM_MCP_PORTS 8   //// calc by hand - two each on two mcp23017s
 #define NUM_MCP_IO_PER_PORT 8
 #define NUM_MCP_IO (NUM_MCP_PORTS * NUM_MCP_IO_PER_PORT)
 #define NUM_MCP_EVENT (NUM_MCP_IO*2) 
@@ -49,8 +52,8 @@ const uint8_t MCP_ADDRESSES[] = {  0x20, 0x21 };
 //#define PCA_ADDRESS1 0x40  //// Choose address for first pca9685 board
 //#define PCA_ADDRESS2 0x41  //// Choose address for second pca9685 board
 const uint8_t PCA_ADDRESSES[] = { 0x40, 0x41, 0x42, 0x43 };
-#define NUM_PCA 2
-#define NUM_PCA_PORTS 4 // MUST BE CALCULATED BY HAND
+#define NUM_PCA 1
+#define NUM_PCA_PORTS 2 // MUST BE CALCULATED BY HAND
 #define NUM_PCA_SERVO_PER_PORT 8
 #define NUM_PCA_SERVO (NUM_PCA_PORTS * NUM_PCA_SERVO_PER_PORT)
 #define NUM_PCA_SERVO_EVENT (NUM_PCA_SERVO*4)
@@ -65,8 +68,8 @@ const bool USE_90_ON_STARTUP = true;  // move
 
 // Board definitions
 #define MANU "OpenLCB"           // The manufacturer of node
-#define MODEL BOARD "40IO32SVO" // The model of the board
-#define HWVERSION "Universal Lite"          // Hardware version
+#define MODEL BOARD "Universal" // The model of the board
+#define HWVERSION "Universal "          // Hardware version
 #define SWVERSION "1.0.0"          // Software version
 
   #ifdef DEBUG
@@ -79,6 +82,9 @@ const bool USE_90_ON_STARTUP = true;  // move
   #include "GCSerial.h"
   #undef DEBUG           // Cannot use DEBUG when using GCSerial
 #endif
+
+#define NOCAN  // Do not comment out prevent the built in OpenLCB CAN drivers
+
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

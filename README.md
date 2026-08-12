@@ -1,5 +1,12 @@
-# MersAG_Universal
-OpenLCB/LCC model railway control software for the ESP32 DevKit 1. It communicates over a CAN bus network using an SN65HVD230 transceiver module and supports 40 inputs/outputs and 32 servos.
+# Universal
 
-# MersAG_Universal_Lite
-A standalone version of the same software that operates without CAN bus communication. It provides the same number of inputs/outputs and servos.
+OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-4
+
+ - Native I/O
+ - 64 MCP23017 I/O
+ - 16 servos on 1 PCA9685.
+ 
+ 
+ This are explained in the documentation being worked on
+ 
+ Part 1 Introduction
