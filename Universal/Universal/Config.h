@@ -15,7 +15,7 @@
 
 // Allow direct to JMRI via USB, without CAN controller, comment out for CAN
 
-//#define USEGCSERIAL
+#define USEGCSERIAL
 
 
 #define NUM_MCP  4          // 1–4  (max 3 if NUM_PCA == 2)
