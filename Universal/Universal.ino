@@ -354,7 +354,7 @@ void userInitAll()
     NODECONFIG.put(EEADDR(mcp[m].status), ESTRING("??"));
     for(uint8_t i = 0; i < 16; i++) {
       NODECONFIG.put(EEADDR(mcp[m].io[i].desc), ESTRING(""));
-      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);
+      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 1);
       NODECONFIG.update(EEADDR(mcp[m].io[i].duration), 0);
       NODECONFIG.update(EEADDR(mcp[m].io[i].period), 0);
     }    
