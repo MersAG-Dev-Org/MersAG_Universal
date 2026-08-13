@@ -118,7 +118,7 @@ const char configDefInfo[] PROGMEM =
   <string size='16'><name>Description of the boards location</name></string>
   <string size='8'><name>This MCP is </name></string>
   <group replication=')" N(2) R"('>
-    <name>Port banks selector care must be taken when using pins A7 or B7 as they are Ouptuts only</name>
+    <name>Port banks selector care must be taken when using pins A7 or B7 as they are Outputs only</name>
     <repname>Port A</repname>
     <repname>Port B</repname>
     <group replication=')" N(NUM_MCP_IO_PER_PORT) R"('>
@@ -166,6 +166,7 @@ const char configDefInfo[] PROGMEM =
   <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
   <description>Care must be taken when supplying the 5 volt power connections to the PCA9685, as many clones do not have reverse polarity protection as adversied.</description>
   <repname>PCA: on 0x40 </repname>
+  <repname>PCA: on 0x41 </repname>
   <string size='16'><name>Description for this PCA boards location</name></string>
   <string size='8'><name>This PCA is </name></string>
   <group replication=')" N(2) R"('>
