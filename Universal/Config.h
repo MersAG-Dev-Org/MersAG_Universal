@@ -39,7 +39,7 @@
 //#define NUM_NATIVE_IO 8 // defined in boards.h
 #define NUM_NAT_IO_EVENT (NUM_NATIVE_IO*2)
 
-const uint8_t MCP_ADDRESSES[] = {  0x27, 0x21, 0x22, 0x23};
+const uint8_t MCP_ADDRESSES[] = {  0x20, 0x21, 0x22, 0x23};
 #define NUM_MCP 4
 #define NUM_MCP_PORTS 8   //// calc by hand - two each on two mcp23017s
 #define NUM_MCP_IO_PER_PORT 8
