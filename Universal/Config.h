@@ -1,4 +1,3 @@
-
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -6,7 +5,7 @@
 #define MERG_NUMBER 8528 // A MERG membership number (in decimal)
 #define NODE_ADDRESS 0x03, 0x04, (MERG_NUMBER >> 16), (MERG_NUMBER >> 8), (MERG_NUMBER & 0xFF), 1 // The last digit needs to be unique to your nodes
 
-// To set a new nodeid edit the next line
+// To set a new nodeid with your own range of IDs
 //#define NODE_ADDRESS  0x05,0x01,0x01,0x01,0x8E,0x01  // must be unique address owned by you for DIY
 
 // To Force Reset EEPROM to Factory Defaults set this value to 1, else 0.
@@ -17,13 +16,54 @@
 
 #define USEGCSERIAL
 
-/*
 
-  ===================================================================================================
-  End of basic users configerations, anything below this is for advanced user to learn how the sketch 
-  is setup. Change any of these values may break the Node
-  ===================================================================================================
-*/
+#define NUM_MCP  4          // 1–4  (max 3 if NUM_PCA == 2)
+#define NUM_PCA  1          // 1 or 2
+
+// ============================================================
+// END Of USER SETTINGS 
+// ============================================================
+
+// ----- MCP ports (2 per MCP) -----
+#if   NUM_MCP == 1
+  #define NUM_MCP_PORTS  2
+#elif NUM_MCP == 2
+  #define NUM_MCP_PORTS  4
+#elif NUM_MCP == 3
+  #define NUM_MCP_PORTS  6
+#elif NUM_MCP == 4
+  #define NUM_MCP_PORTS  8
+#else
+  #error "NUM_MCP must be between 1 and 4"
+#endif
+
+// ----- PCA ports (2 per PCA) -----
+#if   NUM_PCA == 1
+  #define NUM_PCA_PORTS  2
+#elif NUM_PCA == 2
+  #define NUM_PCA_PORTS  4
+#else
+  #error "NUM_PCA must be 1 or 2"
+#endif
+
+// Safety check: only 3 MCPs allowed when using 2 PCAs
+#if (NUM_PCA == 2) && (NUM_MCP > 3)
+  #error "When NUM_PCA is 2 you can have a maximum of 3 MCPs"
+#endif
+
+// ----- Rest of the calculations (leave these alone) -----
+#define NUM_MCP_IO_PER_PORT      8
+#define NUM_MCP_IO               (NUM_MCP_PORTS * NUM_MCP_IO_PER_PORT)
+#define NUM_MCP_EVENT            (NUM_MCP_IO * 2)
+
+#define NUM_PCA_SERVO_PER_PORT   8
+#define NUM_PCA_SERVO            (NUM_PCA_PORTS * NUM_PCA_SERVO_PER_PORT)
+#define NUM_PCA_SERVO_EVENT      (NUM_PCA_SERVO * 4)
+
+#define NUM_IO                   (NUM_NATIVE_IO + NUM_MCP_IO)
+#define NUM_IO_EVENT             (NUM_IO * 2)
+
+#define NUM_EVENT                ( ((NUM_NATIVE_IO + NUM_MCP_IO) * 2) + (NUM_PCA_SERVO * 4) )
 
 // Choose a board, uncomment one line, see boards.h
 
@@ -40,24 +80,11 @@
 #define NUM_NAT_IO_EVENT (NUM_NATIVE_IO*2)
 
 const uint8_t MCP_ADDRESSES[] = {  0x20, 0x21, 0x22, 0x23};
-#define NUM_MCP 4
-#define NUM_MCP_PORTS 8   //// calc by hand - two each on two mcp23017s
-#define NUM_MCP_IO_PER_PORT 8
-#define NUM_MCP_IO (NUM_MCP_PORTS * NUM_MCP_IO_PER_PORT)
-#define NUM_MCP_EVENT (NUM_MCP_IO*2) 
-
-#define NUM_IO (NUM_NATIVE_IO+NUM_MCP_IO)
-#define NUM_IO_EVENT (NUM_IO*2)
 
 //#define PCA_ADDRESS1 0x40  //// Choose address for first pca9685 board
 //#define PCA_ADDRESS2 0x41  //// Choose address for second pca9685 board
 const uint8_t PCA_ADDRESSES[] = { 0x40, 0x41, 0x42, 0x43 };
-#define NUM_PCA 1
-#define NUM_PCA_PORTS 2 // MUST BE CALCULATED BY HAND
-#define NUM_PCA_SERVO_PER_PORT 8
-#define NUM_PCA_SERVO (NUM_PCA_PORTS * NUM_PCA_SERVO_PER_PORT)
-#define NUM_PCA_SERVO_EVENT (NUM_PCA_SERVO*4)
-#define NUM_EVENT (  ( (NUM_NATIVE_IO + NUM_MCP_IO) *2 ) + ((NUM_PCA_SERVO*4)) )
+
 //#define DISABLE_MICROS_AS_DEGREE_PARAMETER // may save space
 #define DISABLE_PAUSE_RESUME // saves some memory
 
@@ -156,7 +183,6 @@ const bool USE_90_ON_STARTUP = true;  // move
 #define _PCAEID(n) _PCAEID_##n
 #define PCAEID(n) _PCAEID(n)
 
-
 // add MCP23017
 #include <MCP23017.h>
 MCP23017* mcp[NUM_MCP];
@@ -167,6 +193,4 @@ MCP23017* mcp[NUM_MCP];
 #define NUMBER_OF_SERVOS  MAX_EASING_SERVOS
 #define ENABLE_EASE_CUBIC
 
-
 #endif // CONFIG_H
-
