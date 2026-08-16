@@ -97,7 +97,7 @@ const bool USE_90_ON_STARTUP = true;  // move
 #define MANU "OpenLCB"           // The manufacturer of node
 #define MODEL BOARD "Universal" // The model of the board
 #define HWVERSION "Universal "          // Hardware version
-#define SWVERSION "1.0.0"          // Software version
+#define SWVERSION "1.0.3"          // Software version
 
   #ifdef DEBUG
     #define PV(x) { dP(" " #x "="); dP(x); }
