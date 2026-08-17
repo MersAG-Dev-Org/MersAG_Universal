@@ -2,8 +2,8 @@
 #define CONFIG_H
 
 // To set a new nodeid based on your MERG membership number, edit the next two lines only
-#define MERG_NUMBER 8528 // A MERG membership number (in decimal)
-#define NODE_INDEX 1     // The digit needs to be unique to your nodes
+#define MERG_NUMBER 25345 // substitute this example membership number with your own number(in decimal)
+#define NODE_INDEX 1     // Change this to a unique number for each node. (0-255)
 
 #define NODE_ADDRESS 0x03, 0x04, (MERG_NUMBER >> 16), (MERG_NUMBER >> 8), (MERG_NUMBER & 0xFF), NODE_INDEX // Donot change this
 
