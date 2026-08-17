@@ -15,7 +15,6 @@
 #define RESET_TO_FACTORY_DEFAULTS 1
 
 // Allow direct to JMRI via USB, without CAN controller, comment out for CAN
-
 #define USEGCSERIAL
 
 
