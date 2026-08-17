@@ -1,30 +1,16 @@
-ToDO / Ideas
-
-1. Write own easing, that way we can detect the 50% of movement and activate the 'midpoint' events.  
-We can just copy the cubic and bounce, and maybe define our own.  
-2. Test detach and reattach.
-3. Test midpoint startup.
-
-
-
-
-ESP32 2SVO8IO2MCP2PCA Example.
+ESP32 MersAG_Universal Example.
 
 This sketch implements: 
 Native channels, using the processors pins:
-  * two servos, each with three positions
-    Positions cabe set to angles 0-180
-    The 0 and 180 end-points of the servos can be configured.
-  * N i/o channels, each of which can be an input or an output,
+  * 8 i/o channels, each of which can be an input or an output,
     If an output it may be solid, pulse or flashing, and consumes an on- and 0ff-event. 
     If an input it produces an on- and off-event, which may each be delayed.  The 
      inputs can be with or with pullups, inverted or not, or can be toggle. 
-  * N is a variable number of 'native' i/o depending on the processor, see board.h
-Two MCP23017 Port Expanders
+Up to four MCP23017 Port Expanders
   * Each with two banks of 8 i/o channels
   * These have the same characteristics as the native i/o.
   * See: e.g. https://www.amazon.ca/MCP23017-MCP23017-Expander-Expansion-3-0V-5-5V/dp/B0FHRRVKSP/
-Two PCA9685 Servo Boards
+Up to Two PCA9685 Servo Boards
   * Each has two banks of 8 servos
   * Each servo has two endpoint positions, controlled by to consumed events.
   * Each servo has two events, produced as the servo passes the midpoint between the two midpoints.  

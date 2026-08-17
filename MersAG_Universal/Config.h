@@ -1,9 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// To set a new nodeid based on your MERG membership number, edit the next line
-#define MERG_NUMBER 8528 // A MERG membership number (in decimal)
-#define NODE_ADDRESS 0x03, 0x04, (MERG_NUMBER >> 16), (MERG_NUMBER >> 8), (MERG_NUMBER & 0xFF), 1 // The last digit needs to be unique to your nodes
+// To set a new nodeid based on your MERG membership number, edit the next two lines only
+#define MERG_NUMBER 25345 // substitute this example membership number with your own number(in decimal)
+#define NODE_INDEX 1     // Change this to a unique number for each node. (0-255)
+
+#define NODE_ADDRESS 0x03, 0x04, (MERG_NUMBER >> 16), (MERG_NUMBER >> 8), (MERG_NUMBER & 0xFF), NODE_INDEX // Donot change this
 
 // To set a new nodeid with your own range of IDs
 //#define NODE_ADDRESS  0x05,0x01,0x01,0x01,0x8E,0x01  // must be unique address owned by you for DIY
@@ -13,7 +15,6 @@
 #define RESET_TO_FACTORY_DEFAULTS 1
 
 // Allow direct to JMRI via USB, without CAN controller, comment out for CAN
-
 #define USEGCSERIAL
 
 
@@ -23,6 +24,12 @@
 // ============================================================
 // END Of USER SETTINGS 
 // ============================================================
+
+// Board definitions
+#define MANU "OpenLCB"           // The manufacturer of node
+#define MODEL BOARD "Universal" // The model of the board
+#define HWVERSION "ESP32 "          // Hardware version
+#define SWVERSION "1.0.4"          // Software version
 
 // ----- MCP ports (2 per MCP) -----
 #if   NUM_MCP == 1
@@ -92,12 +99,6 @@ const uint8_t PCA_ADDRESSES[] = { 0x40, 0x41, 0x42, 0x43 };
 
 // Global defs
 const bool USE_90_ON_STARTUP = true;  // move 
-
-// Board definitions
-#define MANU "OpenLCB"           // The manufacturer of node
-#define MODEL BOARD "Universal" // The model of the board
-#define HWVERSION "Universal "          // Hardware version
-#define SWVERSION "1.0.3"          // Software version
 
   #ifdef DEBUG
     #define PV(x) { dP(" " #x "="); dP(x); }
