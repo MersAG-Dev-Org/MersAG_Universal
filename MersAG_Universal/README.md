@@ -6,7 +6,6 @@ Native channels, using the processors pins:
     If an output it may be solid, pulse or flashing, and consumes an on- and 0ff-event. 
     If an input it produces an on- and off-event, which may each be delayed.  The 
      inputs can be with or with pullups, inverted or not, or can be toggle. 
-  * N is a variable number of 'native' i/o depending on the processor, see board.h
 Up to four MCP23017 Port Expanders
   * Each with two banks of 8 i/o channels
   * These have the same characteristics as the native i/o.
