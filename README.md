@@ -2,7 +2,7 @@
 
 OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-
 
- - 8 Native I/O (ESP32 General Purpose pins)
+ - 8 Native I/O (ESP32 General Purpose input / output pins)
  - 64 MCP23017 I/O If 4 MCPS are used (MCP23017 16 channel GPIO expander)
  - 16 servos on 1 PCA9685. (PCA9685 16 channel Pulse width expander)
 
