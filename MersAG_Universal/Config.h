@@ -29,7 +29,7 @@
 #define MANU "OpenLCB"           // The manufacturer of node
 #define MODEL BOARD "Universal" // The model of the board
 #define HWVERSION "ESP32 "          // Hardware version
-#define SWVERSION "1.0.4"          // Software version
+#define SWVERSION "1.0.5"          // Software version
 
 // ----- MCP ports (2 per MCP) -----
 #if   NUM_MCP == 1
