@@ -1,6 +1,6 @@
 # MersAG_Universal
 
-Use the Releases section on the right to download the latest version of our sketch and documentation to your PC.
+Use the Releases section on the righthand side of the repository to download the latest version of our sketch and documentation to your PC. Rather than the <code> button method.
 
 OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-
 
