@@ -1,5 +1,7 @@
 # MersAG_Universal
 
+Use the Release section on the right to download the latest version of our sketch and documentation to your PC.
+
 OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-
 
  - 8 Native I/O (ESP32 General Purpose input / output pins)
