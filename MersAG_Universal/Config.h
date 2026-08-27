@@ -1,6 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// To Force Reset EEPROM to Factory Defaults set this value to 1, else 0.
+// Need to do this at least once.
+#define RESET_TO_FACTORY_DEFAULTS 1
+
 // To set a new nodeid based on your MERG membership number, edit the next two lines only
 #define MERG_NUMBER 25345 // substitute this example membership number with your own number(in decimal)
 #define NODE_INDEX 1     // Change this to a unique number for each node. (0-255)
@@ -10,13 +14,8 @@
 // To set a new nodeid with your own range of IDs
 //#define NODE_ADDRESS  0x05,0x01,0x01,0x01,0x8E,0x01  // must be unique address owned by you for DIY
 
-// To Force Reset EEPROM to Factory Defaults set this value to 1, else 0.
-// Need to do this at least once.
-#define RESET_TO_FACTORY_DEFAULTS 1
-
 // Allow direct to JMRI via USB, without CAN controller, comment out for CAN
 #define USEGCSERIAL
-
 
 #define NUM_MCP  4          // 1–4  (max 3 if NUM_PCA == 2)
 #define NUM_PCA  1          // 1 or 2
