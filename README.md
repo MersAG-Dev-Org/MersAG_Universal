@@ -8,6 +8,7 @@ Third part libraries required to be downloaded using the Arduino Library manager
   - ESP32Servo by Kevin Harrigton tested with version 3.2.1
   - ServoEasing by Armin Joachimsmeyer tested with version 3.6.0
   - ACAN_ESP32 by Mohamed Irfanulla tested on version 3.0.3
+
 OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-
 
  - 8 Native I/O (ESP32 General Purpose input / output pins)
