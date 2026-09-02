@@ -1,4 +1,4 @@
-// Universal 1.0.0 Base node
+// Universal 1.0.9 
 /*
   2026.01.17 changes: Added second MCP23017, modified CDI
 
@@ -314,10 +314,6 @@ uint8_t protocolIdentValue[6] = {   //0xD7,0x58,0x00,0,0,0};
     ButtonLed* buttons[8] = { &pA,&pA,&pB,&pB,&pC,&pC,&pD,&pD };
 #endif // OLCB_NO_BLUE_GOLD
 
-//#include <Servo.h>    //// NANO, Minima etc
-//#include <ESP32Servo.h> //// ESP32
-Servo servo[2];
-
 uint8_t iopin[NUM_IO] = { IOPINS }; //// ESP32 
 
 enum Type { tNONE=0, tIN, tINI, tINP, tINPI, tTOG, tTOGI, tPA, tPAI, tPB, tPBI };
@@ -334,8 +330,6 @@ bool mcpexists[NUM_MCP];
 
 uint8_t pcastate[NUM_PCA_SERVO];
 bool fakeinput = 0;
-
-
 
 // This is called to initialize the EEPROM to Factory Reset
 void userInitAll()
@@ -554,69 +548,45 @@ void pcawrite(int ch, int angle) {
     ServoEasing::ServoEasingArray[ch]->startEaseTo(angle);
   }
 }
-/*
-void processPCA() {
-  static long last = 0;
-  if( (millis()-last) < 100 ) return;
-  last = millis();
-  //uint8_t s = 0;
-  for(int ch=0; ch<NUM_PCA_SERVO; ch++) {
-    if( !ServoEasing::ServoEasingArray[ch]->isMoving() ) {
-      //dP("\n pca "); dP(i); dP(" is stopped.");
-      if( ServoEasing::ServoEasingArray[ch]->getCurrentAngle() == target[ch] ) {
-        dP(" at target, so shutdown the PWM.");
-        ServoEasing::ServoEasingArray[ch]->setPWM(0, 4096);
-        continue;
-      }
-      uint8_t t1 = NODECONFIG.read( EEADDR(pca[ch/16].pcaservo[ch%16].angle1) );
-      uint8_t t2 = NODECONFIG.read( EEADDR(pca[ch/16].pcaservo[ch%16].angle2) );
-      uint8_t mdpt = (t1+t2)/2;
-      if( ServoEasing::ServoEasingArray[ch]->getCurrentAngle() == mdpt ) {
-        if( ServoEasing::ServoEasingArray[ch]->getCurrentAngle() < target[ch] ) {
-          dP("\n is going up");
-          OpenLcb.produce(pcabase+ch*4+3);
-        } else {
-          dP("\n is going down");
-          OpenLcb.produce(pcabase+ch*4+3);
-        }
-        pcawrite(ch, target[ch]);
-      }
-      //dP("\n continue to the target: pcaservo "); dP(ch/16); dP(":"); dP(ch%16); dP(" to "); dP(target[ch]);
-    }
-  }
-}
-*/
+
 
 // this routine is called when a servo reaches its endpoint
 void endOfMove(ServoEasing* servo) {
     int servoIndex = -1;
-    // Iterate through the global array to find a pointer match
     for (int ch = 0; ch < NUM_PCA_SERVO; ch++) {
         if (servo == ServoEasing::ServoEasingArray[ch]) {
-            servoIndex = ch;  // the matching servo's index
+            servoIndex = ch;
             break;
         }
     }
-    dP("\n Found index = "); dP(servoIndex);
-    if (servoIndex != -1) { // if found
-      uint8_t a1 = NODECONFIG.read( EEADDR(pca[servoIndex/16].pcaservo[servoIndex%16].angle1) );
-      uint8_t a2 = NODECONFIG.read( EEADDR(pca[servoIndex/16].pcaservo[servoIndex%16].angle2) );
-      uint8_t mp = (a1+a2)/2;  // calulate the midpoint
-      if( servo->getCurrentAngle() == mp ) {
-        if( mp<target[servoIndex] ) OpenLcb.produce(pcabase+servoIndex*4+2); // if going up, send the up-event
-        if( mp>target[servoIndex] ) OpenLcb.produce(pcabase+servoIndex*4+3); // if going down, send the down-event
-        ServoEasing::ServoEasingArray[servoIndex]->setEasingType(EASE_CUBIC_OUT);
-        pcawrite(servoIndex, target[servoIndex]);  // finish the move
-      } else { // we assume its at the endpoint
-        dP("\n at end point ->");
-        if( doreattach) {
-          //ServoEasing::ServoEasingArray[servoIndex]->detach();
-          //ServoEasing::ServoEasingArray[servoIndex]->setPWM(0, 4096);
-          servo->setPWM(0, 4096);
-          dP(" turnoff");
+    
+    if (servoIndex != -1) {
+        uint8_t a1 = NODECONFIG.read(EEADDR(pca[servoIndex/16].pcaservo[servoIndex%16].angle1));
+        uint8_t a2 = NODECONFIG.read(EEADDR(pca[servoIndex/16].pcaservo[servoIndex%16].angle2));
+        uint8_t mp = (a1 + a2) / 2;
+        
+        // Calculate the absolute global index for this servo's PCA event block
+        uint16_t servoEventBase = NUM_NAT_IO_EVENT + NUM_MCP_EVENT + (servoIndex * 4);
+
+        if (servo->getCurrentAngle() == mp) {
+            // Determine direction based on final target position vs midpoint
+            if (target[servoIndex] == a2) {
+                // Moving towards Position 2 (Event index offset + 2)
+                OpenLcb.produce(servoEventBase + 2);
+            } else if (target[servoIndex] == a1) {
+                // Moving towards Position 1 (Event index offset + 3)
+                OpenLcb.produce(servoEventBase + 3);
+            }
+
+            // Continue ease to final position target
+            ServoEasing::ServoEasingArray[servoIndex]->setEasingType(EASE_CUBIC_OUT);
+            pcawrite(servoIndex, target[servoIndex]);
+        } else { 
+            // Servo arrived at the final target endpoint
+            if (doreattach) {
+                servo->setPWM(0, 4096); // Turn off PWM driver to save power/prevent jitter
+            }
         }
-        else dP(" leave active");
-      }
     } 
 }
 
