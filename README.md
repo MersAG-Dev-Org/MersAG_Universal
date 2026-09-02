@@ -2,7 +2,7 @@
 
 Use the Releases section on the righthand side of the repository to download the latest version of our sketch and documentation to your PC. Rather than the <code> CODE </code> button method.
 
-Third part libraries required to be downloaded using the Arduino Library manager.
+Third party libraries required to be downloaded using the Arduino Library manager.
   - OpenLCB_Single_Thread by David Harris, Version 0.1.19
   - mcp23017 by Bertrand Lemasle tested with version 2.0.0
   - ESP32Servo by Kevin Harrigton tested with version 3.2.1
