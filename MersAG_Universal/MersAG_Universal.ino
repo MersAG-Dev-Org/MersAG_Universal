@@ -45,6 +45,7 @@ Pin allocations
 */
 
 /* Third party Library needsed for this sketch to work are Available in the library manager.
+  - OpenLCB_Single_Thread by David Harris, Version 0.1.19
   - mcp23017 by Bertrand Lemasle tested with version 2.0.0
   - ESP32Servo by Kevin Harrigton tested with version 3.2.1
   - ServoEasing by Armin Joachimsmeyer tested with version 3.6.0

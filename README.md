@@ -2,6 +2,13 @@
 
 Use the Releases section on the righthand side of the repository to download the latest version of our sketch and documentation to your PC. Rather than the <code> CODE </code> button method.
 
+Third part libraries required to be downloaded using the Arduino Library manager.
+  - OpenLCB_Single_Thread by David Harris, Version 0.1.19
+  - mcp23017 by Bertrand Lemasle tested with version 2.0.0
+  - ESP32Servo by Kevin Harrigton tested with version 3.2.1
+  - ServoEasing by Armin Joachimsmeyer tested with version 3.6.0
+  - ACAN_ESP32 by Mohamed Irfanulla tested on version 3.0.3
+
 OpenLCB/LCC model railway control software for the ESP32 DevKit 1. The software can support the following :-
 
  - 8 Native I/O (ESP32 General Purpose input / output pins)
