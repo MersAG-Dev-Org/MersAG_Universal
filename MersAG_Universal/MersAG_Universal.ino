@@ -1,4 +1,4 @@
-// Universal 1.0.9 
+// Universal 1.0.10 
 /*
   2026.01.17 changes: Added second MCP23017, modified CDI
 
@@ -167,6 +167,7 @@ const char configDefInfo[] PROGMEM =
   <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
   <description>Care must be taken when supplying the 5 volt power connections to the PCA9685, as many clones do not have reverse polarity protection as adversied.</description>
   <repname>PCA: on 0x40 </repname>
+  <repname>PCA: on 0x41 </repname>
   <string size='16'><name>Description for this PCA boards location</name></string>
   <string size='8'><name>This PCA is </name></string>
   <group replication=')" N(2) R"('>
