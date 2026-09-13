@@ -17,8 +17,9 @@
 // Allow direct to JMRI via USB, without CAN controller, comment out for CAN
 #define USEGCSERIAL
 
-#define NUM_MCP  4          // 1–4  (max 3 if NUM_PCA == 2)
-#define NUM_PCA  1          // 1 or 2
+#define NUM_NATIVE_IO  8    // 0 or 8 only allowed If ESP32 Pins defined in boards.h other boards use less pins.
+#define NUM_MCP 4           // 0–4  (max 3 if NUM_PCA == 2, MAX is 1 if NUM_PCA == 3)
+#define NUM_PCA 1           // 0-3
 
 // ============================================================
 // END Of USER SETTINGS 
@@ -28,10 +29,12 @@
 #define MANU "OpenLCB"           // The manufacturer of node
 #define MODEL BOARD "Universal" // The model of the board
 #define HWVERSION "ESP32 "          // Hardware version
-#define SWVERSION "1.0.10"          // Software version
+#define SWVERSION "1.0.11"          // Software version
 
 // ----- MCP ports (2 per MCP) -----
-#if   NUM_MCP == 1
+#if   NUM_MCP == 0 
+  #define NUM_MCP_PORTS  0
+#elif NUM_MCP == 1
   #define NUM_MCP_PORTS  2
 #elif NUM_MCP == 2
   #define NUM_MCP_PORTS  4
@@ -40,50 +43,68 @@
 #elif NUM_MCP == 4
   #define NUM_MCP_PORTS  8
 #else
-  #error "NUM_MCP must be between 1 and 4"
+  #error "NUM_MCP must be 0, 1, 2, 3, or 4"
 #endif
 
 // ----- PCA ports (2 per PCA) -----
-#if   NUM_PCA == 1
+#if   NUM_PCA == 0
+  #define NUM_PCA_PORTS  0 
+#elif NUM_PCA == 1
   #define NUM_PCA_PORTS  2
 #elif NUM_PCA == 2
   #define NUM_PCA_PORTS  4
+#elif NUM_PCA == 3
+  #define NUM_PCA_PORTS  6
 #else
-  #error "NUM_PCA must be 1 or 2"
+  #error "NUM_PCA must be 0, 1 or 2"
 #endif
 
 // Safety check: only 3 MCPs allowed when using 2 PCAs
 #if (NUM_PCA == 2) && (NUM_MCP > 3)
   #error "When NUM_PCA is 2 you can have a maximum of 3 MCPs"
 #endif
-
+#if (NUM_PCA == 3) && (NUM_MCP > 2)
+  #error "When NUM_PCA is 3 you can have a maximum of 1 MCPs"
+#endif
 // ----- Rest of the calculations (leave these alone) -----
+
+// ----- Descriptions Size in the CDI
+#define NUM_DESC_SIZE 12
+#define NUM_EVENT_PER_NATIVE_IO  2
+// calculate numbers of events etc.  
+#define NUM_NATIVE_IO_EVENT      NUM_NATIVE_IO * NUM_EVENT_PER_NATIVE_IO
+
+#define NUM_EVENT_PER_MCP_IO     2
 #define NUM_MCP_IO_PER_PORT      8
 #define NUM_MCP_IO               (NUM_MCP_PORTS * NUM_MCP_IO_PER_PORT)
-#define NUM_MCP_EVENT            (NUM_MCP_IO * 2)
+#define NUM_MCP_EVENT            (NUM_MCP_IO * NUM_EVENT_PER_MCP_IO)
+#define NUM_IO                   (NUM_NATIVE_IO + NUM_MCP_IO)   
+#define NUM_IO_EVENT             (NUM_NATIVE_IO_EVENT + NUM_MCP_EVENT)
 
+#define NUM_EVENT_PER_SERVO      6
 #define NUM_PCA_SERVO_PER_PORT   8
 #define NUM_PCA_SERVO            (NUM_PCA_PORTS * NUM_PCA_SERVO_PER_PORT)
-#define NUM_PCA_SERVO_EVENT      (NUM_PCA_SERVO * 4)
+#define NUM_PCA_SERVO_EVENT      (NUM_PCA_SERVO * NUM_EVENT_PER_SERVO)
 
-#define NUM_IO                   (NUM_NATIVE_IO + NUM_MCP_IO)
-#define NUM_IO_EVENT             (NUM_IO * 2)
-
-#define NUM_EVENT                ( ((NUM_NATIVE_IO + NUM_MCP_IO) * 2) + (NUM_PCA_SERVO * 4) )
+///#define NUM_EVENT                ( ((NUM_NATIVE_IO + NUM_MCP_IO) * 2) + (NUM_PCA_SERVO * 4) )
+#define NUM_EVENT                ( NUM_NATIVE_IO_EVENT + NUM_MCP_EVENT + NUM_PCA_SERVO_EVENT )
 
 // Choose a board, uncomment one line, see boards.h
-
+//#define NANO_BOARD
+//#define ESP32_DAVIDE  // this is for the C6
 #define ESP32_BOARD // ESP32_BOARD ESP32 Dev 
 //#define ATOM_BOARD
+//#define M5NANOC6_BOARD
+//#define MINIMA_BOARD
 
 // Debugging -- uncomment to activate debugging statements:
-
 //#define DEBUG Serial
 
 #include "boards.h"
 
 //#define NUM_NATIVE_IO 8 // defined in boards.h
-#define NUM_NAT_IO_EVENT (NUM_NATIVE_IO*2)
+#define NUM_EVENT_PER_NAT_IO   2
+#define NUM_NAT_IO_EVENT       (NUM_NATIVE_IO * NUM_EVENT_PER_NAT_IO)
 
 const uint8_t MCP_ADDRESSES[] = {  0x20, 0x21, 0x22, 0x23};
 
@@ -100,8 +121,10 @@ const uint8_t PCA_ADDRESSES[] = { 0x40, 0x41, 0x42, 0x43 };
 const bool USE_90_ON_STARTUP = true;  // move 
 
   #ifdef DEBUG
+    //#define dP(...) Serial.print(__VA_ARGS__)
     #define PV(x) { dP(" " #x "="); dP(x); }
   #else
+    //#define dP(...)
     #define PV(x) 
   #endif
 
@@ -135,51 +158,53 @@ const bool USE_90_ON_STARTUP = true;  // move
 
 #define REG_IO(i) PCEID(natio[i].onEid), PCEID(natio[i].offEid)
 #define _IOEID_0 
-#define _IOEID_1 REG_IO(0)
-#define _IOEID_2 _IOEID_1, REG_IO(1)
-#define _IOEID_3 _IOEID_2, REG_IO(2)
-#define _IOEID_4 _IOEID_3, REG_IO(3)
-#define _IOEID_5 _IOEID_4, REG_IO(4)
-#define _IOEID_6 _IOEID_5, REG_IO(5)
-#define _IOEID_7 _IOEID_6, REG_IO(6)
-#define _IOEID_8 _IOEID_7, REG_IO(7)
-#define _IOEID_9 _IOEID_8, REG_IO(8)
-#define _IOEID_10 _IOEID_9, REG_IO(9)
-#define _IOEID_11 _IOEID_10, REG_IO(10)
-#define _IOEID_12 _IOEID_11, REG_IO(11)
-#define _IOEID_13 _IOEID_12, REG_IO(12)
-#define _IOEID_14 _IOEID_13, REG_IO(13)
-#define _IOEID_15 _IOEID_14, REG_IO(14)
-#define _IOEID_16 _IOEID_15, REG_IO(15)
-#define _IOEID_17 _IOEID_16, REG_IO(16)
+#define _IOEID_1 REG_IO(0),
+#define _IOEID_2 _IOEID_1 REG_IO(1),
+#define _IOEID_3 _IOEID_2 REG_IO(2),
+#define _IOEID_4 _IOEID_3 REG_IO(3),
+#define _IOEID_5 _IOEID_4 REG_IO(4),
+#define _IOEID_6 _IOEID_5 REG_IO(5),
+#define _IOEID_7 _IOEID_6 REG_IO(6),
+#define _IOEID_8 _IOEID_7 REG_IO(7),
+#define _IOEID_9 _IOEID_8 REG_IO(8),
+#define _IOEID_10 _IOEID_9 REG_IO(9),
+#define _IOEID_11 _IOEID_10 REG_IO(10),
+#define _IOEID_12 _IOEID_11 REG_IO(11),
+#define _IOEID_13 _IOEID_12 REG_IO(12),
+#define _IOEID_14 _IOEID_13 REG_IO(13),
+#define _IOEID_15 _IOEID_14 REG_IO(14),
+#define _IOEID_16 _IOEID_15 REG_IO(15),
+#define _IOEID_17 _IOEID_16 REG_IO(16),
 #define _IOEID(n) _IOEID_##n
 #define IOEID(n) _IOEID(n)
 
 #define REG_MCPIO(i) PCEID(mcp[(i)/16].io[(i)%16].onEid), PCEID(mcp[(i)/16].io[(i)%16].offEid)
 #define REG_MCP(g) REG_MCPIO(g), REG_MCPIO(g+1), REG_MCPIO(g+2), REG_MCPIO(g+3), REG_MCPIO(g+4), REG_MCPIO(g+5), REG_MCPIO(g+6), REG_MCPIO(g+7)
 #define _MCPEID_0 
-#define _MCPEID_1 REG_MCP(0)
-#define _MCPEID_2 _MCPEID_1, REG_MCP(8)
-#define _MCPEID_3 _MCPEID_2, REG_MCP(16)
-#define _MCPEID_4 _MCPEID_3, REG_MCP(24)
-#define _MCPEID_5 _MCPEID_4, REG_MCP(32)
-#define _MCPEID_6 _MCPEID_5, REG_MCP(40)
-#define _MCPEID_7 _MCPEID_6, REG_MCP(48)
-#define _MCPEID_8 _MCPEID_7, REG_MCP(56)
+#define _MCPEID_1 REG_MCP(0),
+#define _MCPEID_2 _MCPEID_1 REG_MCP(8),
+#define _MCPEID_3 _MCPEID_2 REG_MCP(16),
+#define _MCPEID_4 _MCPEID_3 REG_MCP(24),
+#define _MCPEID_5 _MCPEID_4 REG_MCP(32),
+#define _MCPEID_6 _MCPEID_5 REG_MCP(40),
+#define _MCPEID_7 _MCPEID_6 REG_MCP(48),
+#define _MCPEID_8 _MCPEID_7 REG_MCP(56),
 #define _MCPEID(n) _MCPEID_##n
 #define MCPEID(n) _MCPEID(n)
 
-#define REG_SVO(s) CEID(pca[(s)/16].pcaservo[(s)%16].eid1), CEID(pca[(s)/16].pcaservo[(s)%16].eid2), PEID(pca[(s)/16].pcaservo[(s)%16].eidup), PEID(pca[(s)/16].pcaservo[(s)%16].eiddown) 
+#define REG_SVO(s) CEID(pca[(s)/16].pcaservo[(s)%16].eid1), CEID(pca[(s)/16].pcaservo[(s)%16].eid2),     \
+                   PEID(pca[(s)/16].pcaservo[(s)%16].eidup), PEID(pca[(s)/16].pcaservo[(s)%16].eiddown), \
+                   PEID(pca[(s)/16].pcaservo[(s)%16].eidReach1), PEID(pca[(s)/16].pcaservo[(s)%16].eidReach2)
 #define REG_PCA(g) REG_SVO(g+0), REG_SVO(g+1), REG_SVO(g+2), REG_SVO(g+3), REG_SVO(g+4), REG_SVO(g+5), REG_SVO(g+6), REG_SVO(g+7)
 #define _PCAEID_0 
-#define _PCAEID_1 REG_PCA(0)
-#define _PCAEID_2 _PCAEID_1, REG_PCA(8)
-#define _PCAEID_3 _PCAEID_2, REG_PCA(16)
-#define _PCAEID_4 _PCAEID_3, REG_PCA(24)
-#define _PCAEID_5 _PCAEID_4, REG_PCA(32)
-#define _PCAEID_6 _PCAEID_5, REG_PCA(40)
-#define _PCAEID_7 _PCAEID_6, REG_PCA(48)
-#define _PCAEID_8 _PCAEID_7, REG_PCA(56)
+#define _PCAEID_1 REG_PCA(0),
+#define _PCAEID_2 _PCAEID_1 REG_PCA(8),
+#define _PCAEID_3 _PCAEID_2 REG_PCA(16),
+#define _PCAEID_4 _PCAEID_3 REG_PCA(24),
+#define _PCAEID_5 _PCAEID_4 REG_PCA(32),
+#define _PCAEID_6 _PCAEID_5 REG_PCA(40),
+#define _PCAEID_7 _PCAEID_6 REG_PCA(48),
+#define _PCAEID_8 _PCAEID_7 REG_PCA(56),
 #define _PCAEID(n) _PCAEID_##n
 #define PCAEID(n) _PCAEID(n)
 
