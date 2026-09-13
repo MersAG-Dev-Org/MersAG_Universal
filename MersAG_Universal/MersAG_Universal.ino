@@ -1,4 +1,4 @@
-// Universal 1.0.10 
+// Universal 1.0.11
 /*
   2026.01.17 changes: Added second MCP23017, modified CDI
 
@@ -17,8 +17,8 @@ Pin allocations
  derived from work by Alex Shepherd and David Harris
  Updated 2026 June David P Harris & John holmes
 ==============================================================
- - 8 Native input/output channels:
- - 64 MCP23017 input/output channels: Note A7 & B7 our Output only
+ - 0-8 Native input/output channels:
+ - 0-64  4 x MCP23017 input/output channels: Note A7 & B7 our Output only
     - type: 0=None, 
              1=Input, 2=Input inverted, 
              3=Input with pull-up, 4=Input with pull-up inverted, 
@@ -32,11 +32,12 @@ Pin allocations
        - Events are produced
        - On-delay: delay before on-event is sent
        - Off-delay: the period before the off-event is sent
- - 32 servos 2 x PCA9685
+ - 0-48 servos 3 x PCA9685
      - 2 end-user configured position for Turnout control
      - Consumed event
      - Midpoint frog switch events when going to position 2
      - Midpoint frog switch events when going to position 1
+     - Target position reached events
      - indepentent servo speed adjustment
  - PCA servo option selector
      - 2 option for all servo start up 90 degree or midpoint 
@@ -45,7 +46,7 @@ Pin allocations
 */
 
 /* Third party Library needsed for this sketch to work are Available in the library manager.
-  - OpenLCB_Single_Thread by David Harris, Version 0.1.19
+  - OpenLCB_Single_Thread by David Harris, Version 0.1.20
   - mcp23017 by Bertrand Lemasle tested with version 2.0.0
   - ESP32Servo by Kevin Harrigton tested with version 3.2.1
   - ServoEasing by Armin Joachimsmeyer tested with version 3.6.0
@@ -68,163 +69,182 @@ const char configDefInfo[] PROGMEM =
   CDIheader R"(
 <name>Application Configuration</name>
 <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
-<group replication=')" N(NUM_NATIVE_IO) R"('>
-  <name>ESP32 Native Input or Output pins</name>
-  <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
-  <description>Each pin can be either HIGH or LOW state logic, they can be set as Input, Output, or not used, with 11 end-user options to choose from the dropdown list.</description>
-  <repname>Pin D16</repname>
-  <repname>Pin D17</repname>
-  <repname>Pin D18</repname>
-  <repname>Pin D19</repname>
-  <repname>Pin D14</repname>
-  <repname>Pin D27</repname>
-  <repname>Pin D26</repname>
-  <repname>Pin D25</repname>
-  <string size='16'><name>Description</name></string>
-  <int size='1'>
-    <name>Channel type</name>
-    <map>
-      <relation><property>0</property><value>None</value></relation> 
-      <relation><property>1</property><value>Input</value></relation> 
-      <relation><property>2</property><value>Input Inverted</value></relation> 
-      <relation><property>3</property><value>Input with pull-up</value></relation>
-      <relation><property>4</property><value>Input with pull-up, Inverted</value></relation>
-      <relation><property>5</property><value>Toggle</value></relation>
-      <relation><property>6</property><value>Toggle with pull-up</value></relation>
-      <relation><property>7</property><value>Output Phase A</value></relation>
-      <relation><property>8</property><value>Output Phase A Inverted</value></relation>
-      <relation><property>9</property><value>Output Phase B</value></relation>
-      <relation><property>10</property><value>Output Phase B Inverted</value></relation>
-    </map>
-  </int>
-  <int size='1'>
-    <name>On-Duration/On-delay 1-255 = 100ms-25.5s, 0=steady-state</name>
-    <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
-  </int>
-  <int size='1'>
-    <name>Off-Period/Off-delay 1-255 = 100ms-25.5s, 0=No repeat</name>
-    <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
-  </int>
-  <eventid><name>Pin State HIGH 3.3 volts-Event</name></eventid>
-  <eventid><name>Pin State LOW 0 volts-Event</name></eventid>
-</group>
-<group replication=')" N(NUM_MCP) R"('>
-  <name>MCP23017 16 channel expander.</name>
-  <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
-  <description>Each pin can be either HIGH or LOW state logic. They can be set as Input(Except for A7 and B7), Output or not used, with 11 end-user options to choose from the dropdown list.</description>
-  <repname>MCP: on 0x20 </repname>
-  <repname>MCP: on 0x21 </repname>
-  <repname>MCP: on 0x22 </repname>
-  <repname>MCP: on 0x23 </repname>
-  <string size='16'><name>Description of the boards location</name></string>
-  <string size='8'><name>This MCP is </name></string>
-  <group replication=')" N(2) R"('>
-    <name>Port banks selector care must be taken when using pins A7 or B7 as they are Ouptuts only</name>
-    <repname>Port A</repname>
-    <repname>Port B</repname>
-    <group replication=')" N(NUM_MCP_IO_PER_PORT) R"('>
-      <name>Port pins offer the same selections as the native inputs and outputs from the dropdown list</name>
-      <repname>0</repname>
-      <repname>1</repname>
-      <repname>2</repname>
-      <repname>3</repname>
-      <repname>4</repname>
-      <repname>5</repname>
-      <repname>6</repname>
-      <repname>7(OUT ONLY)</repname>
-      <string size='16'><name>Description</name></string>
-      <int size='1'>
-        <name>Channel type</name>
-        <map>
-          <relation><property>0</property><value>None</value></relation> 
-          <relation><property>1</property><value>Input</value></relation> 
-          <relation><property>2</property><value>Input Inverted</value></relation> 
-          <relation><property>3</property><value>Input with pull-up</value></relation>
-          <relation><property>4</property><value>Input with pull-up, Inverted</value></relation>
-          <relation><property>5</property><value>Toggle</value></relation>
-          <relation><property>6</property><value>Toggle with pull-up</value></relation>
-          <relation><property>7</property><value>Output Phase A</value></relation>
-          <relation><property>8</property><value>Output Phase A Inverted</value></relation>
-          <relation><property>9</property><value>Output Phase B</value></relation>
-          <relation><property>10</property><value>Output Phase B Inverted</value></relation>
-        </map>
-      </int>
-      <int size='1'>
-        <name>On-Duration/On-delay 1-255 = 100ms-25.5s, 0=steady-state</name>
-        <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
-      </int>
-      <int size='1'>
-        <name>Off-Period/Off-delay 1-255 = 100ms-25.5s, 0=No repeat</name>
-        <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
-      </int>
-      <eventid><name>Pin State HIGH 3.3 volts-Event</name></eventid>
-      <eventid><name>Pin State LOW 0 volts-Event</name></eventid>
-    </group>
+)"
+#if NUM_NATIVE_IO>0
+  R"(
+  <group replication=')" N(NUM_NATIVE_IO) R"('>
+    <name>ESP32 Native Input or Output pins</name>
+    <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
+    <description>Each pin can be either HIGH or LOW state logic, they can be set as Input, Output, or not used, with 11 end-user options to choose from the dropdown list.</description>
+    <repname>Pin D16</repname>
+    <repname>Pin D17</repname>
+    <repname>Pin D18</repname>
+    <repname>Pin D19</repname>
+    <repname>Pin D14</repname>
+    <repname>Pin D27</repname>
+    <repname>Pin D26</repname>
+    <repname>Pin D25</repname>
+    <string size=')" N(NUM_DESC_SIZE) R"('><name>Description</name></string>
+    <int size='1'>
+      <name>Channel type</name>
+      <map>
+        <relation><property>0</property><value>None</value></relation> 
+        <relation><property>1</property><value>Input</value></relation> 
+        <relation><property>2</property><value>Input Inverted</value></relation> 
+        <relation><property>3</property><value>Input with pull-up</value></relation>
+        <relation><property>4</property><value>Input with pull-up, Inverted</value></relation>
+        <relation><property>5</property><value>Toggle</value></relation>
+        <relation><property>6</property><value>Toggle with pull-up</value></relation>
+        <relation><property>7</property><value>Output Phase A</value></relation>
+        <relation><property>8</property><value>Output Phase A Inverted</value></relation>
+        <relation><property>9</property><value>Output Phase B</value></relation>
+        <relation><property>10</property><value>Output Phase B Inverted</value></relation>
+      </map>
+    </int>
+    <int size='1'>
+      <name>On-Duration/On-delay 1-255 = 100ms-25.5s, 0=steady-state</name>
+      <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+    </int>
+    <int size='1'>
+      <name>Off-Period/Off-delay 1-255 = 100ms-25.5s, 0=No repeat</name>
+      <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+    </int>
+    <eventid><name>Pin State HIGH 3.3 volts-Event</name></eventid>
+    <eventid><name>Pin State LOW 0 volts-Event</name></eventid>
   </group>
-</group>
-<group replication=')" N(NUM_PCA) R"('>
-  <name>PCA9685 Servos modules</name>
-  <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
-  <description>Care must be taken when supplying the 5 volt power connections to the PCA9685, as many clones do not have reverse polarity protection as adversied.</description>
-  <repname>PCA: on 0x40 </repname>
-  <repname>PCA: on 0x41 </repname>
-  <string size='16'><name>Description for this PCA boards location</name></string>
-  <string size='8'><name>This PCA is </name></string>
-  <group replication=')" N(2) R"('>
-  <name> Take note of the numbers in brackets are for channels 8 to 15</name>
-    <repname>Channels 0-7</repname>
-    <repname>Channels (8-15)</repname>
-    <group replication=')" N(NUM_PCA_SERVO_PER_PORT) R"('>
-      <name>Servo pins start 0 to 15 check marking to ensure the servo is on the channel you think.</name>
-      <repname>0(8)</repname>
-      <repname>1(9)</repname>
-      <repname>2(10)</repname>
-      <repname>3(11)</repname>
-      <repname>4(12)</repname>
-      <repname>5(13)</repname>
-      <repname>6(14)</repname>
-      <repname>7(15)</repname>
-      <string size='16'><name>Description</name></string>
-      <int size='1'><name>Speed of movement 5-50</name>
-        <min>5</min><max>50</max>
-        <hints><slider tickSpacing='20' immediate='yes' showValue='yes'> </slider></hints>
-      </int>
-      <int size='1'><name>Position 1 (Suggestion Closed). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
-        <min>0</min><max>180</max>
-        <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
-      </int>
-      <eventid><name>When consumed, move to this angle</name></eventid>
-      <int size='1'><name>Position 2 (Suggestion Thrown). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
-        <min>0</min><max>180</max>
-        <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
-      </int>
-      <eventid><name>When consumed, move to this angle</name></eventid>
-      <group>
-        <name>MidPoint Events</name>
-        <eventid><name>Sends this event when the servo passes the midpoint moving towards position 2</name></eventid>
-        <eventid><name>Sends this event when the servo passes the midpoint moving towards position 1</name></eventid>
+  )"
+#endif
+#if NUM_MCP>0
+  R"(
+  <group replication=')" N(NUM_MCP) R"('>
+    <name>MCP23017 16 channel expander.</name>
+    <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
+    <description>Each pin can be either HIGH or LOW state logic. They can be set as Input(Except for A7 and B7), Output or not used, with 11 end-user options to choose from the dropdown list.</description>
+    <repname>MCP: on 0x20 </repname>
+    <repname>MCP: on 0x21 </repname>
+    <repname>MCP: on 0x22 </repname>
+    <repname>MCP: on 0x23 </repname>
+    <string size=')" N(NUM_DESC_SIZE) R"('><name>Description of the boards location</name></string>
+    <string size='8'><name>This MCP is </name></string>
+    <group replication=')" N(2) R"('>
+      <name>Port banks selector care must be taken when using pins A7 or B7 as they are Outputs only</name>
+      <repname>Port A</repname>
+      <repname>Port B</repname>
+      <group replication=')" N(NUM_MCP_IO_PER_PORT) R"('>
+        <name>Port pins offer the same selections as the native inputs and outputs from the dropdown list</name>
+        <repname>0</repname>
+        <repname>1</repname>
+        <repname>2</repname>
+        <repname>3</repname>
+        <repname>4</repname>
+        <repname>5</repname>
+        <repname>6</repname>
+        <repname>7(OUT ONLY)</repname>
+        <string size='16'><name>Description</name></string>
+        <int size='1'>
+          <name>Channel type</name>
+          <map>
+            <relation><property>0</property><value>None</value></relation> 
+            <relation><property>1</property><value>Input</value></relation> 
+            <relation><property>2</property><value>Input Inverted</value></relation> 
+            <relation><property>3</property><value>Input with pull-up</value></relation>
+            <relation><property>4</property><value>Input with pull-up, Inverted</value></relation>
+            <relation><property>5</property><value>Toggle</value></relation>
+            <relation><property>6</property><value>Toggle with pull-up</value></relation>
+            <relation><property>7</property><value>Output Phase A</value></relation>
+            <relation><property>8</property><value>Output Phase A Inverted</value></relation>
+            <relation><property>9</property><value>Output Phase B</value></relation>
+            <relation><property>10</property><value>Output Phase B Inverted</value></relation>
+          </map>
+        </int>
+        <int size='1'>
+          <name>On-Duration/On-delay 1-255 = 100ms-25.5s, 0=steady-state</name>
+          <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+        </int>
+        <int size='1'>
+          <name>Off-Period/Off-delay 1-255 = 100ms-25.5s, 0=No repeat</name>
+          <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+        </int>
+        <eventid><name>Pin State HIGH 3.3 volts-Event</name></eventid>
+        <eventid><name>Pin State LOW 0 volts-Event</name></eventid>
+      </group>
+    </group>
+  </group> 
+  )"
+#endif
+#if NUM_PCA>0
+  R"(
+  <group replication=')" N(NUM_PCA) R"('>
+    <name>PCA9685 Servos modules</name>
+    <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
+    <description>Care must be taken when supplying the 5 volt power connections to the PCA9685, as many clones do not have reverse polarity protection as adversied.</description>
+    <repname>PCA: on 0x40 </repname>
+    <repname>PCA: on 0x41 </repname>
+    <repname>PCA: on 0x42 </repname>
+    <string size=')" N(NUM_DESC_SIZE) R"('><name>Description for this PCA boards location</name></string>
+    <string size='8'><name>This PCA is </name></string>
+    <group replication=')" N(2) R"('>
+    <name> Take note of the numbers in brackets are for channels 8 to 15</name>
+      <repname>Channels 0-7</repname>
+      <repname>Channels (8-15)</repname>
+      <group replication=')" N(NUM_PCA_SERVO_PER_PORT) R"('>
+        <name>Servo pins start 0 to 15 check marking to ensure the servo is on the channel you think.</name>
+        <repname>0(8)</repname>
+        <repname>1(9)</repname>
+        <repname>2(10)</repname>
+        <repname>3(11)</repname>
+        <repname>4(12)</repname>
+        <repname>5(13)</repname>
+        <repname>6(14)</repname>
+        <repname>7(15)</repname>
+        <string size=')" N(NUM_DESC_SIZE) R"('><name>Description</name></string>
+        <int size='1'><name>Speed of movement 5-50</name>
+          <min>5</min><max>50</max>
+          <hints><slider tickSpacing='20' immediate='yes' showValue='yes'> </slider></hints>
+        </int>
+        <int size='1'><name>Position 1 (Suggestion Closed). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
+          <min>0</min><max>180</max>
+          <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
+        </int>
+        <eventid><name>When consumed, move to this angle</name></eventid>
+        <int size='1'><name>Position 2 (Suggestion Thrown). Angles between approximately 0-180 Care must be taken when using the slider in case of damage to turnouts.</name>
+          <min>0</min><max>180</max>
+          <hints><slider tickSpacing='45' immediate='yes' showValue='yes'> </slider></hints>
+        </int>
+        <eventid><name>When consumed, move to this angle</name></eventid>
+        <group>
+          <name>MidPoint Events</name>
+          <eventid><name>Sends this event when the servo passes the midpoint moving towards position 2</name></eventid>
+          <eventid><name>Sends this event when the servo passes the midpoint moving towards position 1</name></eventid>
+        </group>
+        <group>
+          <name>Endpoint Events</name>
+          <eventid><name>Sends this event when the servo reaches position 1</name></eventid>
+          <eventid><name>Sends this event when the servo reaches position 2</name></eventid>
+        </group>
       </group>
     </group>
   </group>
-</group>
-<group>
-  <name>PCA Servo Options</name>
-  <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
-  <int size='1'><name>At start-up, intialize the servos to:</name>
-    <map>
-      <relation><property>0</property><value>90 degrees</value></relation> 
-      <relation><property>1</property><value>Midpoint between the endpoints</value></relation> 
-    </map>
-  </int>
-  <int size='1'><name>At start-up, intialize with this interval between each 10ms increments 0-2550ms</name></int>
-  <int size='1'><name>At end of servo movement </name>
-    <map>
-      <relation><property>0</property><value>Leave servo active</value></relation> 
-      <relation><property>1</property><value>Shutdown servo</value></relation> 
-    </map>
-  </int>
-</group>
-    )" CDIfooter;
+  <group>
+    <name>PCA Servo Options</name>
+    <hints><visibility hideable='yes' hidden='yes' ></visibility></hints>
+    <int size='1'><name>At start-up, intialize the servos to:</name>
+      <map>
+        <relation><property>0</property><value>90 degrees</value></relation> 
+        <relation><property>1</property><value>Midpoint between the endpoints</value></relation> 
+      </map>
+    </int>
+    <int size='1'><name>At start-up, intialize with this interval between each 10ms increments 0-2550ms</name></int>
+    <int size='1'><name>At end of servo movement </name>
+      <map>
+        <relation><property>0</property><value>Leave servo active</value></relation> 
+        <relation><property>1</property><value>Shutdown servo</value></relation> 
+      </map>
+    </int>
+  </group> 
+  )"
+#endif
+CDIfooter;
 // ===== Enter User definitions above =====
 } // end extern
 
@@ -236,7 +256,7 @@ const char configDefInfo[] PROGMEM =
           char nodeDesc[24];  // optional node-description, used by ACDI
       // ===== Enter User definitions below =====
           struct {
-            char desc[16];
+            char desc[NUM_DESC_SIZE];
             uint8_t type;
             uint8_t duration;    // 100ms-25.5s, 0=solid
             uint8_t period;      // 100ms-25.5s, 0=no repeat
@@ -244,7 +264,7 @@ const char configDefInfo[] PROGMEM =
             EventID offEid;
           } natio[NUM_NATIVE_IO];
           struct {
-            char desc[16];
+            char desc[NUM_DESC_SIZE];
             char status[8];
             struct {
               char desc[16];
@@ -256,10 +276,10 @@ const char configDefInfo[] PROGMEM =
             } io[16]; 
           } mcp[NUM_MCP];         
           struct {
-            char desc[16];
+            char desc[NUM_DESC_SIZE];
             char status[8];
             struct {
-              char desc[16];
+              char desc[NUM_DESC_SIZE];
               uint8_t speed;
               uint8_t angle1;
               EventID eid1;
@@ -267,6 +287,8 @@ const char configDefInfo[] PROGMEM =
               EventID eid2;
               EventID eidup;
               EventID eiddown;
+              EventID eidReach1;
+              EventID eidReach2;
             } pcaservo[16];
           } pca[NUM_PCA];
           uint8_t pcaStartupPosition;
@@ -282,8 +304,8 @@ extern "C" {
 
     //  Array of the offsets to every eventID in MemStruct/EEPROM/mem, and P/C flags
     const EIDTab eidtab[NUM_EVENT] PROGMEM = {
-        IOEID(NUM_NATIVE_IO),     // native io
-        MCPEID(NUM_MCP_PORTS),    // mcp io
+        IOEID(NUM_NATIVE_IO)     // native io  Note: no commas
+        MCPEID(NUM_MCP_PORTS)    // mcp io
         PCAEID(NUM_PCA_PORTS)     // pca servos
     };
     
@@ -335,8 +357,8 @@ bool fakeinput = 0;
 // This is called to initialize the EEPROM to Factory Reset
 void userInitAll()
 { 
-  NODECONFIG.put(EEADDR(nodeName), ESTRING(BOARD));
-  NODECONFIG.put(EEADDR(nodeDesc), ESTRING("Universal "));
+  NODECONFIG.put(EEADDR(nodeName), ESTRING(BOARD " Universal"));
+  NODECONFIG.put(EEADDR(nodeDesc), ESTRING(N(NUM_NATIVE_IO) "NAT " N(NUM_MCP) "MCP " N(NUM_PCA) "PCA"));
   dP("\n NUM_NATIVE_IO"); dP(NUM_NATIVE_IO);
   for(uint8_t i = 0; i < NUM_NATIVE_IO; i++) {
     NODECONFIG.put(EEADDR(natio[i].desc), ESTRING(""));
@@ -350,7 +372,7 @@ void userInitAll()
     NODECONFIG.put(EEADDR(mcp[m].status), ESTRING("??"));
     for(uint8_t i = 0; i < 16; i++) {
       NODECONFIG.put(EEADDR(mcp[m].io[i].desc), ESTRING(""));
-      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 1);
+      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);  // INPUT_PULLUP
       NODECONFIG.update(EEADDR(mcp[m].io[i].duration), 0);
       NODECONFIG.update(EEADDR(mcp[m].io[i].period), 0);
     }    
@@ -382,7 +404,7 @@ uint8_t userState(uint16_t index) {
       if( type==0) return UNKNOWN;
       int evst = index % 2;
       if(type==5 || type==6) { // ie a toggle
-        Serial.print("\n toggle state"); PV(type); PV(evst); PV(logstate[ch]);
+        dP("\n toggle state"); PV(type); PV(evst); PV(logstate[ch]);
         if( logstate[ch]!=evst ) return VALID;  // (0 is on, and 1 is off)
         return INVALID;
       } else {
@@ -413,17 +435,17 @@ uint8_t userState(uint16_t index) {
 void mcpinit() {
   for (int i = 0; i < NUM_MCP; i++) {
     mcpexists[i] = i2cexists(MCP_ADDRESSES[i]);
-    Serial.print("\nMCP23017 at ");
-    Serial.print(MCP_ADDRESSES[i], HEX);
+    dP("\nMCP23017 at ");
+    dPH(MCP_ADDRESSES[i]);
     if(mcpexists[i]) {
       mcp[i] = new MCP23017(MCP_ADDRESSES[i]);
       mcp[i]->init(); 
       //String text = String("@") + String(MCP_ADDRESSES[i]);
       //NODECONFIG.put( EEADDR( mcp[i].status ), text.c_str() );
       NODECONFIG.put( EEADDR( mcp[i].status ), "OK" );
-      Serial.println(" is ready.");
+      dP(" is ready.\n");
     } else {
-      Serial.println(" is missing.");
+      dP(" is missing.\n");
       NODECONFIG.put( EEADDR( mcp[i].status ), "Missing" );
     }
   }
@@ -436,23 +458,23 @@ void mcpinit() {
   }
  #endif
 }
-void setMode(uint8_t i, uint8_t mode) {
+void setMode(int i, uint8_t mode) {
   if(i<NUM_NATIVE_IO) pinMode(iopin[i], mode);
   else {
     uint8_t ch = i-NUM_NATIVE_IO;
-    if(!mcpexists[ch/16]) { Serial.print("\nmcp missing1"); return; }
+    if(!mcpexists[ch/16]) { dP("\nmcp missing1"); return; }
     mcp[ch/16]->pinMode(ch%16, mode);
   }
 }
-void digOut(uint8_t i, uint8_t value) {
+void digOut(int i, uint8_t value) {
   if(i<NUM_NATIVE_IO) digitalWrite(iopin[i], value);
   else {
     uint8_t ch = i-NUM_NATIVE_IO;
-    if(!mcpexists[ch/16]) { Serial.print("\nmcp missing2"); return; }
+    if(!mcpexists[ch/16]) { dP("\nmcp missing2"); return; }
     mcp[ch/16]->digitalWrite(ch%16, value); 
   }
 }
-uint8_t digIn(uint8_t c) {
+uint8_t digIn(int c) {
   if(c<NUM_NATIVE_IO) return digitalRead(iopin[c]);
   else {
     uint8_t ch = c-NUM_NATIVE_IO;
@@ -469,8 +491,8 @@ uint16_t pcabase =  NUM_IO_EVENT;
 
 void getAndAttach16ServosToPCA9685Expander(uint8_t base, uint8_t aPCA9685I2CAddress) {
     ServoEasing *tServoEasingObjectPtr;
-    Serial.print(F("\n    Get ServoEasing objects and attach servos to PCA9685 expander at address=0x"));
-    Serial.print(aPCA9685I2CAddress, HEX);
+    dP(F("\n    Get ServoEasing objects and attach servos to PCA9685 expander at address=0x"));
+    dPH(aPCA9685I2CAddress);
     uint8_t pcaStartupPosition = NODECONFIG.read( EEADDR(pcaStartupPosition));
     dP("\n    pcaStartupPosition="); dP(pcaStartupPosition);
     //for (uint_fast8_t i = 0; i < PCA9685_MAX_CHANNELS; ++i) {
@@ -488,11 +510,11 @@ void getAndAttach16ServosToPCA9685Expander(uint8_t base, uint8_t aPCA9685I2CAddr
         }
         dP(" angle="); dP(angle);
         if (tServoEasingObjectPtr->attach(i, angle) == INVALID_SERVO) {
-            Serial.print(F("Address=0x"));
-            Serial.print(aPCA9685I2CAddress, HEX);
-            Serial.print(F(" i="));
-            Serial.print(i);
-            Serial.println(F(" Error attaching servo - maybe MAX_EASING_SERVOS=" STR(MAX_EASING_SERVOS) " is to small to hold all servos"));
+            dP(F("Address=0x"));
+            dPH(aPCA9685I2CAddress);
+            dP(F(" i="));
+            dP((int)i);
+            dP(F(" Error attaching servo - maybe MAX_EASING_SERVOS=" STR(MAX_EASING_SERVOS) " is to small to hold all servos\n"));
         } else {
             uint16_t sdelay = NODECONFIG.read( EEADDR(startupInterval) );
             delay(sdelay * 10);
@@ -514,15 +536,15 @@ void pcaInit() {
   dP("\nPCA Init");
   for(uint8_t i=0; i<NUM_PCA; i++) {
     if( i2cexists(PCA_ADDRESSES[i]) ) pcaexists[i]=true;
-    Serial.print("\n  PCA address:"); Serial.print(PCA_ADDRESSES[i],HEX);
-    if( !i2cexists(PCA_ADDRESSES[i]) ) {
-      Serial.print(F(" PCA9685 expander not connected -> disabled."));
-      NODECONFIG.put( EEADDR( pca[i].status), "Missing"); // xxx
-      pcaexists[i]=false;
-    } else {
-      Serial.print(F(" PCA9685 expander connected."));
+    dP("\n  PCA address:"); dPH(PCA_ADDRESSES[i]);
+    if( pcaexists[i] ) {
+      dP(F("\n PCA9685 expander connected."));
       NODECONFIG.put( EEADDR( pca[i].status), "OK"); // xxx
       getAndAttach16ServosToPCA9685Expander(i*16, PCA_ADDRESSES[i]);
+    } else {
+      dP(F("\n PCA9685 expander not connected -> disabled."));
+      NODECONFIG.put( EEADDR( pca[i].status), "Missing"); // xxx
+      pcaexists[i]=false;
     }
   }
   setEasingTypeForAllServos(EASE_CUBIC_IN_OUT); //
@@ -534,7 +556,7 @@ void pcaInit() {
     }
     pcastate[ch]=2;
   }
-  Serial.print("\n End of PCA Init");
+  ///dP("\n End of PCA Init");
 }
 void pcawrite(int ch, int angle) {
   //ServoEasing::ServoEasingArray[i]->easeTo(angle);
@@ -567,7 +589,12 @@ void endOfMove(ServoEasing* servo) {
         uint8_t mp = (a1 + a2) / 2;
         
         // Calculate the absolute global index for this servo's PCA event block
-        uint16_t servoEventBase = NUM_NAT_IO_EVENT + NUM_MCP_EVENT + (servoIndex * 4);
+        ///uint16_t servoEventBase = NUM_NAT_IO_EVENT + NUM_MCP_EVENT + (servoIndex * NUM_EVENT_PER_SERVO);
+        uint16_t servoEventBase = NUM_IO_EVENT + (servoIndex * NUM_EVENT_PER_SERVO);
+        dP("\n endOfMove");
+        dP(" NUM_IO_EVENT"); dP(NUM_IO_EVENT);
+        dP(" servoIndex= "); dP(servoIndex);
+        dP(" servoEventBase= "); dP(servoEventBase);
 
         if (servo->getCurrentAngle() == mp) {
             // Determine direction based on final target position vs midpoint
@@ -584,6 +611,12 @@ void endOfMove(ServoEasing* servo) {
             pcawrite(servoIndex, target[servoIndex]);
         } else { 
             // Servo arrived at the final target endpoint
+            dP("\n at endpoint");
+            dP("  target[servoIndex]="); dP(target[servoIndex]);
+            dP("  a1= "); dP(a1);
+            dP("  a2= "); dP(a2);
+            if (target[servoIndex] == a1) OpenLcb.produce(servoEventBase + 4);
+            if (target[servoIndex] == a2) OpenLcb.produce(servoEventBase + 5);
             if (doreattach) {
                 servo->setPWM(0, 4096); // Turn off PWM driver to save power/prevent jitter
             }
@@ -592,17 +625,17 @@ void endOfMove(ServoEasing* servo) {
 }
 
 // ===== Process Consumer-eventIDs =====
-uint8_t getType(uint16_t ch) {
+uint8_t getType(int ch) {
   if(ch<NUM_NATIVE_IO) return NODECONFIG.read( EEADDR( natio[ch].type) );
   ch -= NUM_NATIVE_IO;
   return NODECONFIG.read( EEADDR( mcp[ch/16].io[ch%16].type) );
 }
-uint8_t getDurn(uint16_t ch) {
+uint8_t getDurn(int ch) {
   if(ch<NUM_NATIVE_IO) return NODECONFIG.read( EEADDR( natio[ch].duration) );
   ch -= NUM_NATIVE_IO;
   return NODECONFIG.read( EEADDR( mcp[ch/16].io[ch%16].duration) );
 }
-uint8_t getPeriod(uint16_t ch) {
+uint8_t getPeriod(int ch) {
   if(ch<NUM_NATIVE_IO) return NODECONFIG.read( EEADDR( natio[ch].period) );
   ch -= NUM_NATIVE_IO;
   return NODECONFIG.read( EEADDR( mcp[ch/16].io[ch%16].period) );
@@ -615,7 +648,6 @@ void pceCallback(uint16_t index) {
 //
   dP("\npceCallback, index="); dP((uint16_t)index);
   
-  dP("\nless servo index="); dP((uint16_t)index);
   if( index< ( NUM_NAT_IO_EVENT+NUM_MCP_EVENT) ) {
     dP("\nnative and mcp io");
     dP("\n  NUM_NAT_IO_EVENT+NUM_MCP_EVENT="); dP(index);
@@ -647,19 +679,23 @@ void pceCallback(uint16_t index) {
     return;
   }
   // PCA9685 Servos
-  index -= ( NUM_NAT_IO_EVENT+NUM_MCP_EVENT);    // adjust index   
-  dP("\nless IO+mcp servos index="); dP((uint16_t)index);      
+  //index -= ( NUM_NAT_IO_EVENT+NUM_MCP_EVENT);    // adjust index   
+  index -= ( NUM_IO_EVENT );    // adjust index   
+  dP("\nCorrected servos index="); dP((uint16_t)index);      
   if( index<NUM_PCA_SERVO_EVENT) {
-    dP("\n NUM_PCA_SERVO_EVENT="); dP(index);
-    uint8_t i = index/(16*4);       // which PCA board  0->1
-    uint8_t ch = index/4;           // which channel    0->32
-    uint8_t e = index%4;            // which consumer event 0->3
+    dP("\n NUM_PCA_SERVO_EVENT="); dP(NUM_PCA_SERVO_EVENT);
+    uint8_t i = index/(16*NUM_EVENT_PER_SERVO);       // which PCA board  0->1
+    uint8_t ch = index/NUM_EVENT_PER_SERVO;           // which channel    0->32
+    uint8_t e = index%NUM_EVENT_PER_SERVO;            // which consumer event 0->1
+    dP(" i=");dP(i); dP(" ch=");dP(ch); dP(" e=");dP(e); 
     uint8_t speed = NODECONFIG.read( EEADDR(pca[ch/16].pcaservo[ch%16].speed) );
     if(speed==0) speed=1;
     if(speed>100) speed=100;
+    dP(" speed=");dP(speed);
     ServoEasing::ServoEasingArray[ch]->setSpeed(speed);
     uint8_t t1 = NODECONFIG.read( EEADDR(pca[ch/16].pcaservo[ch%16].angle1) ); // get the angle-positions for this channel
     uint8_t t2 = NODECONFIG.read( EEADDR(pca[ch/16].pcaservo[ch%16].angle2) );
+    dP(" t1=");dP(t1);     dP(" t2=");dP(t2);
     dP("\n pca board="); dP(i); dP(" channel="); dP(ch); dP(" eid#="); dP(e);
     uint8_t mdpt = (t1+t2)/2;    // call the midpoint
     dP(" posn1="); dP(t1); dP(" posn2="); dP(t2); dP(" current position="); dP(ServoEasing::ServoEasingArray[ch]->getCurrentAngle());
@@ -878,13 +914,17 @@ void appProcess() {
 void setup()
 {
   #ifdef DEBUG
-    #define dP(...) Serial.print(__VA_ARGS__)
     Serial.begin(115200); while(!Serial) delay(100); delay(2000);
     dP("\n Universal");
     dP("\n num native io = "); dP(NUM_NATIVE_IO);
-    dP("\n num mcp groups = "); dP(NUM_MCP_PORTS);
-    dP("\n num io in each mcp group = "); dP(NUM_MCP_IO_PER_PORT);
-    dP("\n num mcp io = "); dP(NUM_MCP_IO);
+    dP("\n num mcp = "); dP(NUM_MCP);
+    dP(", num mcp groups = "); dP(NUM_MCP_PORTS);
+    dP(", num io in each mcp group = "); dP(NUM_MCP_IO_PER_PORT);
+    dP(", num mcp io = "); dP(NUM_MCP_IO);
+    dP("\n num pca = "); dP(NUM_PCA);
+    dP(", num pca groups = "); dP(NUM_PCA_PORTS);
+    dP(", num io in each pca group = "); dP(NUM_PCA_SERVO_PER_PORT);
+    dP(", num pca servos = "); dP(NUM_PCA_SERVO);
     //dP("\n mcp23017-1 address = "); dPH(MCP_ADDRESS1);
     //dP("\n mcp23017-2 address = "); dPH(MCP_ADDRESS2);
     for(int i=0; i<NUM_MCP; i++) { dP("\n mcp23017("); dP(i); dP(") address = "); dPH(MCP_ADDRESSES[i]); }
@@ -892,12 +932,19 @@ void setup()
     //dP("\n pca9685-2 address = "); dPH(PCA_ADDRESS2);
     for(int i=0; i<NUM_PCA; i++) { dP("\n pca9685("); dP(i); dP(") address = "); dPH(PCA_ADDRESSES[i]); }
     dP("\n total num io = "); dP(NUM_IO);
-    dP("\n num events = "); dP(NUM_EVENT);
     dP("\n num native io events = "); dP( NUM_NAT_IO_EVENT);
     dP("\n num mcp events = "); dP(NUM_MCP_EVENT);
+    dP(", mcp events astart at: "); dP(NUM_NAT_IO_EVENT); dP(" 0x");dPH(NUM_NAT_IO_EVENT);
     dP("\n num pca servo events = "); dP(NUM_PCA_SERVO_EVENT);
+    dP(", pca events astart at: "); dP(NUM_NAT_IO_EVENT+NUM_MCP_EVENT);  
+    dP(" or "); dP(NUM_IO_EVENT); dP(" 0x");dPH(NUM_IO_EVENT);
+    dP("\n Total number of events = "); dP(NUM_EVENT);
     dP("\n size of MemStruct = "); dP(sizeof(MemStruct));
+    //while(1);
   #endif
+
+  // sanity check
+  static_assert(sizeof(MemStruct) <= 4096, "The CDI is too big (>4096 bytes)");
 
   WIRE_begin;                        // defined in boards.h
   EEPROMbegin;
@@ -1084,8 +1131,8 @@ if(c=='I') {  // io
             uint8_t p = Serial.parseInt();
             if(p>1) break;
             dP("\n ==> set servo "); dP(s); dP(" to position "); dP(p);
-            if(p<=0) pceCallback( NUM_IO_EVENT + s*4 );
-            if(p>=1) pceCallback( NUM_IO_EVENT + s*4+1 );
+            if(p<=0) pceCallback( NUM_IO_EVENT + s*NUM_EVENT_PER_SERVO );
+            if(p>=1) pceCallback( NUM_IO_EVENT + s*NUM_EVENT_PER_SERVO+1 );
           }
           break;
         case 'v': { // speed
@@ -1100,7 +1147,7 @@ if(c=='I') {  // io
         case 'l': // list
           dP("\n\nPCA Servos");
           for(int s=0; s<NUM_PCA_SERVO; s++) {
-            if( !pcaexists[s/16] ) continue;
+            //if( !pcaexists[s/16] ) continue;
             dP("\n"); dP(s); 
             dP(" angle1="); dP(NODECONFIG.read( EEADDR( pca[s/16].pcaservo[s%16].angle1))); 
             dP(" angle2="); dP(NODECONFIG.read( EEADDR( pca[s/16].pcaservo[s%16].angle2))); 
@@ -1139,8 +1186,8 @@ if(c=='I') {  // io
       dP("\n  Mf: set IO OFF: If IO#");
       dP("\n  Ml: list mcp io");
       dP("\nPCA9685 Servos:");
-      dP("\n  Pa: set angle: a servo# pos#(1-2) angle(0-180)");
-      dP("\n  Pm: move servo: s servo# posn#(1-2)");
+      dP("\n  Pa: set angles: a servo# angle0 angle1 (0-180)");
+      dP("\n  Pm: move servo: s servo# posn#(0-1)");
       dP("\n  Pv: set servo speed: v servo# speed(1-50)");
       dP("\n  Pi: intiitailize position: i 0 = 90 degress, i 1 = midpoint");
       dP("\n  Pc: configuration: 0=90, 1=midpoint");
