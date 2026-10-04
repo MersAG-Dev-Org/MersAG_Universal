@@ -1,4 +1,4 @@
-// Universal 1.0.11
+// Universal 1.0.12
 /*
   2026.01.17 changes: Added second MCP23017, modified CDI
 
@@ -367,16 +367,27 @@ void userInitAll()
     NODECONFIG.update(EEADDR(natio[i].period), 0);
   }  
   dP("\n NUM_MCP"); dP(NUM_MCP);
-  for(uint8_t m=0; m<NUM_MCP; m++) {
+  for(uint8_t m = 0; m < NUM_MCP; m++) {
     NODECONFIG.put(EEADDR(mcp[m].desc), ESTRING(""));
     NODECONFIG.put(EEADDR(mcp[m].status), ESTRING("??"));
-    for(uint8_t i = 0; i < 16; i++) {
-      NODECONFIG.put(EEADDR(mcp[m].io[i].desc), ESTRING(""));
-      NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);  // INPUT_PULLUP
-      NODECONFIG.update(EEADDR(mcp[m].io[i].duration), 0);
-      NODECONFIG.update(EEADDR(mcp[m].io[i].period), 0);
-    }    
+  
+  for(uint8_t i = 0; i < 16; i++) {
+    NODECONFIG.put(EEADDR(mcp[m].io[i].desc), ESTRING(""));
+    NODECONFIG.update(EEADDR(mcp[m].io[i].duration), 0);
+    NODECONFIG.update(EEADDR(mcp[m].io[i].period), 0);
   }
+  
+  // Custom types per MCP module
+  for(uint8_t i = 0; i < 7; i++) {
+    NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);
+  }
+    NODECONFIG.update(EEADDR(mcp[m].io[7].type), 7); // or whatever you want
+  
+  for(uint8_t i = 8; i < 15; i++) {
+    NODECONFIG.update(EEADDR(mcp[m].io[i].type), 3);
+  }
+    NODECONFIG.update(EEADDR(mcp[m].io[15].type), 7); // or whatever you want
+}
   for(uint8_t p=0; p<NUM_PCA; p++) {
     NODECONFIG.put(EEADDR(pca[p].desc), ESTRING(""));
     NODECONFIG.put(EEADDR(pca[p].status), ESTRING("??"));
@@ -393,6 +404,7 @@ void userInitAll()
   NODECONFIG.update(EEADDR(doreattach), 1);  // shutdown servo between moves
 
 }
+
 bool doreattach;
 // determine the state of each eventid
 enum evStates { VALID=4, INVALID=5, UNKNOWN=7 };
